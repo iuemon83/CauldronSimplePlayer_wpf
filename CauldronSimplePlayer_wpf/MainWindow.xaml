@@ -1,0 +1,142 @@
+﻿<Window x:Class="CauldronSimplePlayer_wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CauldronSimplePlayer_wpf"
+        mc:Ignorable="d"
+        Title="Cauldron Simple Player" Height="860" Width="700"
+        Loaded="Window_Loaded">
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Left">
+            <DockPanel DockPanel.Dock="Top">
+                <StackPanel Name="OpponentInfos" DockPanel.Dock="Top">
+                    <TextBlock>
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}{0} [HP: {1} / {2}][MP: {3} / {4}] {5}">
+                                <Binding Path="Opponent.Value.Name"/>
+                                <Binding Path="Opponent.Value.CurrentHp"/>
+                                <Binding Path="Opponent.Value.MaxHp"/>
+                                <Binding Path="Opponent.Value.CurrentMp"/>
+                                <Binding Path="Opponent.Value.MaxMp"/>
+                                <Binding Path="OpponentActiveSymbol.Value"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Vertical">
+                    <local:CardControl DataContext="{Binding OpponentDeck.Value}" Margin="10"></local:CardControl>
+                    <local:CardControl DataContext="{Binding OpponentCemetery.Value}" Margin="10"></local:CardControl>
+                </StackPanel>
+                <StackPanel Name="Opponent" DockPanel.Dock="Top" Orientation="Vertical" HorizontalAlignment="Center">
+
+                    <StackPanel Name="OpponentHands" Orientation="Horizontal" Margin="10" HorizontalAlignment="Center">
+                        <local:CardControl DataContext="{Binding OpponentHand.Value}"></local:CardControl>
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding OpponentField.Value}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <local:FieldCardControl DataContext="{Binding .}"></local:FieldCardControl>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </DockPanel>
+
+            <DockPanel DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
+                <StackPanel DockPanel.Dock="Right" Orientation="Vertical">
+                    <local:CardControl DataContext="{Binding YouCemetery.Value}" Margin="10"></local:CardControl>
+                    <local:CardControl DataContext="{Binding YouDeck.Value}" Margin="10"></local:CardControl>
+                </StackPanel>
+                <StackPanel Name="YouInfos" DockPanel.Dock="Bottom">
+                    <TextBlock>
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}{0} [HP: {1} / {2}][MP: {3} / {4}] {5}">
+                                <Binding Path="You.Value.PublicPlayerInfo.Name"/>
+                                <Binding Path="You.Value.PublicPlayerInfo.CurrentHp"/>
+                                <Binding Path="You.Value.PublicPlayerInfo.MaxHp"/>
+                                <Binding Path="You.Value.PublicPlayerInfo.CurrentMp"/>
+                                <Binding Path="You.Value.PublicPlayerInfo.MaxMp"/>
+                                <Binding Path="YouActiveSymbol.Value"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel Name="You" DockPanel.Dock="Bottom" Orientation="Vertical" HorizontalAlignment="Center">
+                    <ItemsControl ItemsSource="{Binding YouField.Value}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <local:FieldCardControl DataContext="{Binding .}"></local:FieldCardControl>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <StackPanel Orientation="Vertical" Margin="10">
+                        <ItemsControl ItemsSource="{Binding YouHands1.Value}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <local:HandCardControl DataContext="{Binding .}"></local:HandCardControl>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <ItemsControl ItemsSource="{Binding YouHands2.Value}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <local:HandCardControl DataContext="{Binding .}"></local:HandCardControl>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="ゲームID:" Height="30"></Label>
+                    <TextBox Text="{Binding GameId.Value}" Width="250" Margin="5"></TextBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="プレイヤー名:" Height="30"></Label>
+                    <TextBox Text="{Binding PlayerName.Value}" Width="250" Margin="5"></TextBox>
+                    <Button Content="スタート" Width="50" Height="20" Click="GameStartButton_Click"></Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Button Width="100" Margin="5" Click="AttackToPlayerButton_Click">プレイヤーへ攻撃</Button>
+                    <Button Width="100" Margin="5" Click="EndTurnButton_Click">ターン終了</Button>
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+        <DockPanel Name="LogViewPanel" DockPanel.Dock="Right"
+                   Margin="5">
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                        HorizontalAlignment="Center">
+            </StackPanel>
+            <Border BorderThickness="1" BorderBrush="Black">
+                <ScrollViewer
+                    Name="LogScrollViewer"
+                    VerticalScrollBarVisibility="Auto">
+                    <TextBlock Text="{Binding Log.Value}"></TextBlock>
+                </ScrollViewer>
+            </Border>
+        </DockPanel>
+    </DockPanel>
+</Window>

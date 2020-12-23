@@ -1,0 +1,192 @@
+syntax = "proto3";
+
+option csharp_namespace = "Cauldron.Grpc.Api";
+
+// import "google/protobuf/empty.proto";
+
+import "Protos/cauldron.model.proto";
+
+package cauldron;
+
+service Cauldron {
+  // 新しいゲームを開始する
+  rpc OpenNewGame (OpenNewGameRequest) returns (OpenNewGameReply);
+  
+  // ゲームを閉じる
+  rpc CloseGame (CloseGameRequest) returns (CloseGameReply);
+  
+  // カードプールを取得する
+  rpc GetCardPool (GetCardPoolRequest) returns (GetCardPoolReply);
+  
+  // デッキをセットする
+  rpc SetDeck (SetDeckRequest) returns (SetDeckReply);
+
+  // ゲームの参加準備を完了する
+  rpc ReadyGame (ReadyGameRequest) returns (stream ReadyGameReply);
+  
+  // ゲームへ参加する
+  rpc EnterGame (EnterGameRequest) returns (EnterGameReply);
+  
+  // ターン開始
+  rpc StartTurn (StartTurnRequest) returns (StartTurnReply);
+  
+  // ターン終了
+  rpc EndTurn (EndTurnRequest) returns (EndTurnReply);
+
+  // 手札からカードをプレイする
+  rpc PlayFromHand (PlayFromHandRequest) returns (PlayFromHandReply);
+
+  // プレイヤーへ攻撃する
+  rpc AttackToPlayer (AttackToPlayerRequest) returns (AttackToPlayerReply);
+
+  // クリーチャーへ攻撃する
+  rpc AttackToCreature (AttackToCreatureRequest) returns (AttackToCreatureReply);
+}
+
+message SetDeckRequest {
+  string gameId = 1;
+  string playerId = 2;
+  repeated string deckCardIds = 3;
+}
+
+message SetDeckReply {
+}
+
+message GetCardPoolRequest {
+  string gameId = 1;
+}
+
+message GetCardPoolReply {
+  repeated CardDef cards = 1;
+}
+
+message ReadyGameRequest {
+  string gameId = 1;
+  string playerId = 2;
+}
+
+message ReadyGameReply {
+  enum Code {
+    Ready = 0;
+    StartGame = 1;
+    GameOver = 2;
+    StartTurn = 3;
+    AddCard = 4;
+    MoveCard = 5;
+    Damage = 6;
+  }
+  Code code = 1;
+  GameContext gameContext = 2;
+  MoveCardNotify moveCardNotify = 3;
+  AddCardNotify addCardNotify = 4;
+  DamageNotify damageNotify = 5;
+}
+
+message AddCardNotify {
+  string cardId = 1;
+  string toZone = 2;
+}
+
+message MoveCardNotify {
+  string cardId = 1;
+  string toZone = 2;
+}
+
+message DamageNotify {
+  enum Reason {
+    Attack = 0;
+    Effect = 1;
+  }
+  Reason reason = 1;
+  string sourceCardId = 2;
+  string guardPlayerId = 3;
+  string guardCardId = 4;
+  int32 damage = 5;
+}
+
+message OpenNewGameRequest {
+  RuleBook ruleBook = 1;
+}
+
+message OpenNewGameReply {
+  string gameId = 1;
+}
+
+message CloseGameRequest {
+  string gameId = 1;
+}
+
+message CloseGameReply {
+  bool result = 1;
+  string errorMessage = 2;
+}
+
+message EnterGameRequest {
+  string gameId = 1;
+  string playerName = 2;
+  repeated string deckCardIds = 3;
+}
+
+message EnterGameReply {
+  string playerId = 1;
+}
+
+message StartTurnRequest {
+  string gameId = 1;
+  string playerId = 2;
+}
+
+message StartTurnReply {
+  bool result = 1;
+  string errorMessage = 2;
+  GameContext gameContext = 3;
+}
+
+message PlayFromHandRequest {
+  string gameId = 1;
+  string playerId = 2;
+  string handCardId = 3;
+}
+
+message PlayFromHandReply {
+  bool result = 1;
+  string errorMessage = 2;
+  GameContext gameContext = 3;
+}
+
+message AttackToPlayerRequest {
+  string gameId = 1;
+  string playerId = 2;
+  string attackHandCardId = 3;
+  string guardPlayerId = 4;
+}
+
+message AttackToPlayerReply {
+  bool result = 1;
+  string errorMessage = 2;
+  GameContext gameContext = 3;
+}
+
+message AttackToCreatureRequest {
+  string gameId = 1;
+  string playerId = 2;
+  string attackHandCardId = 3;
+  string guardHandCardId = 4;
+}
+
+message AttackToCreatureReply {
+  bool result = 1;
+  string errorMessage = 2;
+  GameContext gameContext = 3;
+}
+
+message EndTurnRequest {
+  string gameId = 1;
+  string playerId = 2;
+}
+
+message EndTurnReply {
+  bool result = 1;
+  string errorMessage = 2;
+  GameContext gameContext = 3;
+}

@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+option csharp_namespace = "Cauldron.Grpc.Models";
+
+package cauldron;
+
+message RuleBook{
+    int32 initialPlayerHp = 1;
+    int32 maxPlayerHp = 2;
+    int32 minPlayerHp = 3;
+    int32 maxNumDeckCards = 4;
+    int32 minNumDeckCards = 5;
+    int32 initialNumHands = 6;
+    int32 maxNumHands = 7;
+    int32 initialMp = 8;
+    int32 maxMp = 9;
+    int32 minMp = 10;
+    int32 mpByStep = 11;
+    int32 maxNumFieldCars = 12;
+}
+
+message CardDef {
+  enum Type{
+    Unknown = 0;
+    Creature = 1;
+    Artifact = 2;
+    Sorcery = 3;
+    Token = 4;
+    Counter = 5;
+  }
+  enum Ability{
+    None=0;
+    Cover = 1;
+    Stealth = 2;
+    CantAttack = 3;
+  }
+  string id = 1;
+  string name = 2;
+  string flavorText = 3;
+  int32 power = 4;
+  int32 toughness = 5;
+  string effectText = 6;
+  Type cardType = 7;
+  repeated Ability abilities = 8;
+  int32 cost = 9;
+  bool isToken=10;
+}
+
+message Card {
+  CardDef cardDef = 1;
+  string id = 2;
+  string name = 3;
+  string flavorText = 4;
+  int32 power = 5;
+  int32 toughness = 6;
+  string effectText = 7;
+  string ownerId = 8;
+  CardDef.Type cardType = 9;
+  repeated CardDef.Ability abilities = 10;
+  int32 cost = 11;
+  int32 turnNumInField = 12;
+}
+
+message PublicPlayerInfo {
+    string id = 1;
+    string name = 2;
+    repeated Card field = 3;
+    int32 deckCount = 4;
+    int32 cemeteryCount = 5;
+    int32 handCount = 6;
+    int32 maxHp = 7;
+    int32 currentHp = 8;
+    int32 maxMp = 9;
+    int32 currentMp = 10;
+}
+
+message PrivatePlayerInfo {
+    PublicPlayerInfo publicPlayerInfo = 1;
+    repeated Card hands = 2;
+}
+
+message GameContext {
+  RuleBook ruleBook = 1;
+  PrivatePlayerInfo you = 2;
+  PublicPlayerInfo opponent = 3;
+  bool gameOver = 4;
+  string winnerPlayerId = 5;
+}
