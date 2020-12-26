@@ -24,8 +24,11 @@ namespace CauldronSimplePlayer_wpf
 
             this.DisplayText.Value = this.Card == null
                 ? ""
-                : @$"{this.Card.Name}({this.Card.Cost})
-[{this.Card.Power} / {this.Card.Toughness}]";
+                : @$"
+({this.Card.Cost})
+{this.Card.Name}
+{(card.CardType == CardDef.Types.Type.Creature ? $"[{this.Card.Power} / {this.Card.Toughness}]" : "")}
+";
         }
 
         public void ClickCommand()

@@ -30,7 +30,8 @@
                 </StackPanel>
                 <StackPanel Name="Opponent" DockPanel.Dock="Top" Orientation="Vertical" HorizontalAlignment="Center">
 
-                    <StackPanel Name="OpponentHands" Orientation="Horizontal" Margin="10" HorizontalAlignment="Center">
+                    <StackPanel Name="OpponentHands" Orientation="Horizontal"
+                                Margin="10" HorizontalAlignment="Center">
                         <local:CardControl DataContext="{Binding OpponentHand.Value}"></local:CardControl>
                     </StackPanel>
                     <ItemsControl ItemsSource="{Binding OpponentField.Value}">
@@ -67,7 +68,10 @@
                         </TextBlock.Text>
                     </TextBlock>
                 </StackPanel>
-                <StackPanel Name="You" DockPanel.Dock="Bottom" Orientation="Vertical" HorizontalAlignment="Center">
+                <StackPanel Name="You" DockPanel.Dock="Bottom"
+                            Orientation="Vertical"
+                            HorizontalAlignment="Center"
+                            Margin="10">
                     <ItemsControl ItemsSource="{Binding YouField.Value}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -80,7 +84,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <StackPanel Orientation="Vertical" Margin="10">
+                    <StackPanel Orientation="Vertical" Margin="0,10,0,0">
                         <ItemsControl ItemsSource="{Binding YouHands1.Value}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>

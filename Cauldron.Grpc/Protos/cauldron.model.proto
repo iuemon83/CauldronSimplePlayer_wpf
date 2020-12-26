@@ -65,9 +65,9 @@ message PublicPlayerInfo {
     string id = 1;
     string name = 2;
     repeated Card field = 3;
-    int32 deckCount = 4;
-    int32 cemeteryCount = 5;
-    int32 handCount = 6;
+    int32 numDeckCards = 4;
+    repeated Card cemetery = 5;
+    int32 numHands = 6;
     int32 maxHp = 7;
     int32 currentHp = 8;
     int32 maxMp = 9;

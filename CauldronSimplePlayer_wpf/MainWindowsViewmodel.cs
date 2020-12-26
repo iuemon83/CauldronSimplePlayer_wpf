@@ -12,6 +12,53 @@ namespace CauldronSimplePlayer_wpf
 {
     class MainWindowsViewmodel
     {
+        private static string GetPlayerName(GameContext gameContext, string playerId)
+        {
+            if (string.IsNullOrEmpty(playerId)) return "";
+
+            return gameContext.You.PublicPlayerInfo.Id == playerId
+                ? gameContext.You.PublicPlayerInfo.Name
+                : gameContext.Opponent.Name;
+        }
+
+        private static (string ownerPlayerName, string cardName) GetCardName(GameContext gameContext, Zone zone, string cardId)
+        {
+            if (string.IsNullOrEmpty(cardId)) return ("", "");
+
+            var zonePlayer = gameContext.You.PublicPlayerInfo.Id == zone.PlayerId
+                ? gameContext.You.PublicPlayerInfo
+                : gameContext.Opponent;
+
+            var card = zone.ZoneName switch
+            {
+                "Field" => zonePlayer.Field.First(c => c.Id == cardId),
+                "Cemetery" => zonePlayer.Cemetery.First(c => c.Id == cardId),
+                _ => null
+            };
+
+            if (card == null) return ("", "");
+
+            var ownerName = GetPlayerName(gameContext, card.OwnerId);
+
+            return (ownerName, card.Name);
+        }
+
+        private static (string ownerPlayerName, string cardName) GetCardName(GameContext gameContext, string cardId)
+        {
+            if (string.IsNullOrEmpty(cardId)) return ("", "");
+
+            var card = gameContext.You.Hands
+                .Concat(gameContext.You.PublicPlayerInfo.Field)
+                .Concat(gameContext.You.PublicPlayerInfo.Cemetery)
+                .Concat(gameContext.Opponent.Field)
+                .Concat(gameContext.Opponent.Cemetery)
+                .First(c => c.Id == cardId);
+
+            var ownerName = GetPlayerName(gameContext, card.OwnerId);
+
+            return (ownerName, card.Name);
+        }
+
         public ReactiveProperty<string> GameId { get; } = new("");
 
         public ReactiveProperty<string> PlayerName { get; } = new("ryu");
@@ -62,11 +109,11 @@ namespace CauldronSimplePlayer_wpf
                 .ToReadOnlyReactiveProperty();
 
             this.YouDeck = this.You
-                .Select(x => new DummyCardControlViewmodel(x?.PublicPlayerInfo?.DeckCount.ToString()))
+                .Select(x => new DummyCardControlViewmodel(x?.PublicPlayerInfo?.NumDeckCards.ToString()))
                 .ToReadOnlyReactiveProperty();
 
             this.YouCemetery = this.You
-                .Select(x => new DummyCardControlViewmodel(x?.PublicPlayerInfo?.CemeteryCount.ToString()))
+                .Select(x => new DummyCardControlViewmodel(x?.PublicPlayerInfo?.Cemetery.Count.ToString()))
                 .ToReadOnlyReactiveProperty();
 
             this.OpponentField = this.Opponent
@@ -75,15 +122,15 @@ namespace CauldronSimplePlayer_wpf
                 .ToReadOnlyReactiveProperty();
 
             this.OpponentHand = this.Opponent
-                .Select(x => new DummyCardControlViewmodel(x?.HandCount.ToString()))
+                .Select(x => new DummyCardControlViewmodel(x?.NumHands.ToString()))
                 .ToReadOnlyReactiveProperty();
 
             this.OpponentDeck = this.Opponent
-                .Select(x => new DummyCardControlViewmodel(x?.DeckCount.ToString()))
+                .Select(x => new DummyCardControlViewmodel(x?.NumDeckCards.ToString()))
                 .ToReadOnlyReactiveProperty();
 
             this.OpponentCemetery = this.Opponent
-                .Select(x => new DummyCardControlViewmodel(x?.CemeteryCount.ToString()))
+                .Select(x => new DummyCardControlViewmodel(x?.Cemetery.Count.ToString()))
                 .ToReadOnlyReactiveProperty();
         }
 
@@ -222,8 +269,6 @@ namespace CauldronSimplePlayer_wpf
 
         private async void OnPushedFromServer(ReadyGameReply reply)
         {
-            this.Logging(reply.Code.ToString());
-
             var newGameContext = reply.GameContext;
             switch (reply.Code)
             {
@@ -244,15 +289,6 @@ namespace CauldronSimplePlayer_wpf
                         await this.client.PlayActionAsync(() => this.client.StartTurnAsync());
                         newGameContext = this.client.CurrentContext;
 
-                        //await this.client.PlayActionAsync(() => this.client.PlayFromHandAsync());
-                        //this.ApplyGameContext(this.client.CurrentContext);
-
-                        //await this.client.PlayActionAsync(() => this.client.AttackAsync());
-                        //this.ApplyGameContext(this.client.CurrentContext);
-
-                        //await this.client.PlayActionAsync(() => this.client.EndTurnAsync());
-                        //this.ApplyGameContext(this.client.CurrentContext);
-
                         break;
                     }
 
@@ -261,6 +297,54 @@ namespace CauldronSimplePlayer_wpf
                         this.Logging($"ゲーム終了: {this.client.PlayerName}");
                         break;
                     }
+
+                case ReadyGameReply.Types.Code.AddCard:
+                    {
+                        var notify = reply.AddCardNotify;
+
+                        var (ownerName, cardName) = GetCardName(reply.GameContext, notify.ToZone, notify.CardId);
+                        var playerName = GetPlayerName(reply.GameContext, notify.ToZone.PlayerId);
+
+                        this.Logging($"追加: {cardName}({ownerName}) to {notify.ToZone.ZoneName}({playerName})");
+                        break;
+                    }
+
+                case ReadyGameReply.Types.Code.MoveCard:
+                    {
+                        var notify = reply.MoveCardNotify;
+
+                        var (ownerName, cardName) = GetCardName(reply.GameContext, notify.ToZone, notify.CardId);
+                        var playerName = GetPlayerName(reply.GameContext, notify.ToZone.PlayerId);
+
+                        this.Logging($"移動: {cardName}({ownerName}) to {notify.ToZone.ZoneName}({playerName})");
+                        break;
+                    }
+
+                case ReadyGameReply.Types.Code.ModifyCard:
+                    {
+                        var notify = reply.ModifyCardNotify;
+
+                        var (ownerName, cardName) = GetCardName(reply.GameContext, notify.CardId);
+
+                        this.Logging($"修整: {cardName}({ownerName})");
+                        break;
+                    }
+
+                case ReadyGameReply.Types.Code.Damage:
+                    {
+                        var notify = reply.DamageNotify;
+
+                        var sourceCard = GetCardName(reply.GameContext, notify.SourceCardId);
+                        var guardCard = GetCardName(reply.GameContext, notify.GuardCardId);
+                        var guardPlayerName = GetPlayerName(reply.GameContext, notify.GuardPlayerId);
+
+                        this.Logging($"ダメージ: {sourceCard.cardName}({sourceCard.ownerPlayerName}) > {guardCard.cardName}({guardCard.ownerPlayerName}){guardPlayerName} {notify.Damage}");
+                        break;
+                    }
+
+                default:
+                    this.Logging(reply.Code.ToString());
+                    break;
             }
 
             if (newGameContext != null)
