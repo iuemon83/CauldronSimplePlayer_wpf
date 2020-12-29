@@ -233,38 +233,31 @@ namespace CauldronSimplePlayer_wpf
 
         private void StartAiPlayer()
         {
-            Client aiClient = null;
-            aiClient = new Client("AI", this.GameId.Value, async reply =>
+            AiClient aiClient = null;
+            aiClient = new AiClient("AI", this.GameId.Value, async reply =>
             {
                 switch (reply.Code)
                 {
                     case ReadyGameReply.Types.Code.StartGame:
                         {
-                            this.Logging($"ゲーム開始: {aiClient.PlayerName}");
+                            this.Logging($"ゲーム開始: {aiClient.Client.PlayerName}");
                             break;
                         }
 
                     case ReadyGameReply.Types.Code.StartTurn:
                         {
-                            this.Logging($"ターン開始: {aiClient.PlayerName}");
+                            this.Logging($"ターン開始: {aiClient.Client.PlayerName}");
 
                             this.YouActiveSymbol.Value = "";
                             this.OpponentActiveSymbol.Value = "●";
 
-                            await aiClient.PlayActionAsync(() => aiClient.StartTurnAsync());
-                            await aiClient.PlayActionAsync(() => aiClient.PlayFromHandAsync());
-                            await aiClient.PlayActionAsync(() => aiClient.AttackAsync());
-                            await aiClient.PlayActionAsync(() => aiClient.EndTurnAsync());
+                            await aiClient.PlayTurn();
                             break;
                         }
                 }
             });
 
-            Task.Run(async () =>
-            {
-                await aiClient.EnterGameAsync();
-                aiClient.ReadyGame();
-            });
+            aiClient.Start();
         }
 
         private async void OnPushedFromServer(ReadyGameReply reply)
@@ -327,6 +320,16 @@ namespace CauldronSimplePlayer_wpf
                         var (ownerName, cardName) = GetCardName(reply.GameContext, notify.CardId);
 
                         this.Logging($"修整: {cardName}({ownerName})");
+                        break;
+                    }
+
+                case ReadyGameReply.Types.Code.ModifyPlayer:
+                    {
+                        var notify = reply.ModifyPlayerNotify;
+
+                        var playerName = GetPlayerName(reply.GameContext, notify.PlayerId);
+
+                        this.Logging($"修整: {playerName}");
                         break;
                     }
 

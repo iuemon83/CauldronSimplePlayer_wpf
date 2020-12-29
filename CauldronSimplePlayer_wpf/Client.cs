@@ -249,31 +249,6 @@ namespace CauldronSimplePlayer_wpf
             this.CurrentContext = reply.GameContext;
         }
 
-        public async ValueTask PlayFromHandAsync()
-        {
-            while (true)
-            {
-                var useableMp = this.CurrentContext.You.PublicPlayerInfo.CurrentMp;
-                var card = RandomPick(this.CurrentContext.You.Hands
-                    .Where(c => IsPlayable(this.CurrentContext, c))
-                    .ToArray());
-
-                if (card == default)
-                {
-                    return;
-                }
-
-                var reply = await this.grpcClient.PlayFromHandAsync(new PlayFromHandRequest()
-                {
-                    GameId = this.GameId,
-                    PlayerId = this.PlayerId,
-                    HandCardId = card.Id
-                });
-
-                this.CurrentContext = reply.GameContext;
-            }
-        }
-
         public async ValueTask AttackToCardAsync(string attackCardId, string guardCardId)
         {
             var reply = await this.grpcClient.AttackToCreatureAsync(new AttackToCreatureRequest()
@@ -297,50 +272,6 @@ namespace CauldronSimplePlayer_wpf
                 GuardPlayerId = this.CurrentContext.Opponent.Id,
             });
             this.CurrentContext = reply.GameContext;
-        }
-
-        public async ValueTask AttackAsync()
-        {
-            // フィールドのすべてのカードで敵に攻撃
-            var allCreatures = this.CurrentContext
-                .You.PublicPlayerInfo.Field
-                .Where(card => card.CardType == CardDef.Types.Type.Creature
-                    || card.CardType == CardDef.Types.Type.Token);
-
-            foreach (var attackCard in allCreatures)
-            {
-                var canTargetCards = this.CurrentContext.Opponent.Field
-                    .Where(opponentCard => CanAttack(attackCard, opponentCard, this.CurrentContext))
-                    .ToArray();
-
-                var canAttackToPlayer = CanAttack(attackCard, this.CurrentContext.Opponent);
-                var canAttackToCreature = canTargetCards.Any();
-
-                // 敵のモンスターがいる
-                if (canAttackToCreature && random.Next(100) > 50)
-                {
-                    var opponentCardId = canTargetCards[0].Id;
-                    var reply = await this.grpcClient.AttackToCreatureAsync(new AttackToCreatureRequest()
-                    {
-                        GameId = this.GameId,
-                        PlayerId = this.PlayerId,
-                        AttackHandCardId = attackCard.Id,
-                        GuardHandCardId = opponentCardId
-                    });
-                    this.CurrentContext = reply.GameContext;
-                }
-                else if (canAttackToPlayer)
-                {
-                    var reply = await this.grpcClient.AttackToPlayerAsync(new AttackToPlayerRequest()
-                    {
-                        GameId = this.GameId,
-                        PlayerId = this.PlayerId,
-                        AttackHandCardId = attackCard.Id,
-                        GuardPlayerId = this.CurrentContext.Opponent.Id,
-                    });
-                    this.CurrentContext = reply.GameContext;
-                }
-            }
         }
 
         public async ValueTask EndTurnAsync()

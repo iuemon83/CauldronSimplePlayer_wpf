@@ -75,15 +75,17 @@ message ReadyGameReply {
     StartTurn = 3;
     AddCard = 4;
     MoveCard = 5;
-    Damage = 6;
-    ModifyCard = 7;
+    ModifyCard = 6;
+    ModifyPlayer = 7;
+    Damage = 8;
   }
   Code code = 1;
   GameContext gameContext = 2;
   MoveCardNotify moveCardNotify = 3;
   AddCardNotify addCardNotify = 4;
-  DamageNotify damageNotify = 5;
-  ModifyCardNotify modifyCardNotify = 6;
+  ModifyCardNotify modifyCardNotify = 5;
+  ModifyPlayerNotify modifyPlayerNotify = 6;
+  DamageNotify damageNotify = 7;
 }
 
 message Zone {
@@ -103,6 +105,10 @@ message MoveCardNotify {
 
 message ModifyCardNotify {
   string cardId = 1;
+}
+
+message ModifyPlayerNotify {
+  string playerId = 1;
 }
 
 message DamageNotify {
