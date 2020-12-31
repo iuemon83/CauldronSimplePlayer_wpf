@@ -31,6 +31,9 @@ namespace CauldronSimplePlayer_wpf
 
             var card = zone.ZoneName switch
             {
+                "Hand" => gameContext.You.PublicPlayerInfo.Id == zone.PlayerId
+                    ? gameContext.You.Hands.First(c => c.Id == cardId)
+                    : null,
                 "Field" => zonePlayer.Field.First(c => c.Id == cardId),
                 "Cemetery" => zonePlayer.Cemetery.First(c => c.Id == cardId),
                 _ => null
