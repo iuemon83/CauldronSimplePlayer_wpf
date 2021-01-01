@@ -282,7 +282,7 @@ namespace CauldronSimplePlayer_wpf
                         this.YouActiveSymbol.Value = "●";
                         this.OpponentActiveSymbol.Value = "";
 
-                        await this.client.PlayActionAsync(() => this.client.StartTurnAsync());
+                        await this.client.StartTurnAsync();
                         newGameContext = this.client.CurrentContext;
 
                         break;
@@ -385,7 +385,7 @@ namespace CauldronSimplePlayer_wpf
 
         public async ValueTask TurnEndCommand()
         {
-            await this.client.PlayActionAsync(() => this.client.EndTurnAsync());
+            await this.client.EndTurnAsync();
             this.ApplyGameContext(this.client.CurrentContext);
 
             await Task.Delay(TimeSpan.FromSeconds(0.5));

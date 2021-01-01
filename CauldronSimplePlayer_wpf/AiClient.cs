@@ -1,7 +1,6 @@
 ﻿using Cauldron.Grpc.Api;
 using Cauldron.Grpc.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -12,10 +11,6 @@ namespace CauldronSimplePlayer_wpf
     /// </summary>
     class AiClient
     {
-        private static readonly Random random = new Random();
-
-        public static T RandomPick<T>(IReadOnlyList<T> source) => source.Any() ? source[AiClient.random.Next(source.Count)] : default;
-
         public readonly Client Client;
 
         public AiClient(string playerName, string gameId, Action<ReadyGameReply> onPushedFromServerAction)
@@ -34,10 +29,10 @@ namespace CauldronSimplePlayer_wpf
 
         public async ValueTask PlayTurn()
         {
-            await this.Client.PlayActionAsync(() => this.Client.StartTurnAsync());
-            await this.Client.PlayActionAsync(() => this.PlayFromHandAsync());
-            await this.Client.PlayActionAsync(() => this.AttackAsync());
-            await this.Client.PlayActionAsync(() => this.Client.EndTurnAsync());
+            await this.Client.StartTurnAsync();
+            await this.PlayFromHandAsync();
+            await this.AttackAsync();
+            await this.Client.EndTurnAsync();
         }
 
         public async ValueTask PlayFromHandAsync()
@@ -45,7 +40,7 @@ namespace CauldronSimplePlayer_wpf
             while (true)
             {
                 var useableMp = this.Client.CurrentContext.You.PublicPlayerInfo.CurrentMp;
-                var card = RandomPick(this.Client.CurrentContext.You.Hands
+                var card = RandomUtil.RandomPick(this.Client.CurrentContext.You.Hands
                     .Where(c => Client.IsPlayable(this.Client.CurrentContext, c))
                     .ToArray());
 
@@ -76,7 +71,7 @@ namespace CauldronSimplePlayer_wpf
                 var canAttackToCreature = canTargetCards.Any();
 
                 // 敵のモンスターがいる
-                if (canAttackToCreature && random.Next(100) > 50)
+                if (canAttackToCreature && RandomUtil.Random.Next(100) > 50)
                 {
                     var opponentCardId = canTargetCards[0].Id;
 

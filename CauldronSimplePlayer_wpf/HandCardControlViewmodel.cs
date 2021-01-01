@@ -1,6 +1,7 @@
 ﻿using Cauldron.Grpc.Models;
 using Reactive.Bindings;
 using System;
+using System.Linq;
 using System.Windows.Media;
 
 namespace CauldronSimplePlayer_wpf
@@ -28,6 +29,7 @@ namespace CauldronSimplePlayer_wpf
 ({this.Card.Cost})
 {this.Card.Name}
 {(card.CardType == CardDef.Types.Type.Creature ? $"[{this.Card.Power} / {this.Card.Toughness}]" : "")}
+{string.Join(", ", card.Abilities.Select(a => a.ToString()))}
 ";
         }
 

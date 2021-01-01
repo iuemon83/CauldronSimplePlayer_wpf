@@ -2,7 +2,6 @@
 using Cauldron.Grpc.Models;
 using Grpc.Net.Client;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,10 +10,6 @@ namespace CauldronSimplePlayer_wpf
 {
     class Client
     {
-        private static readonly Random random = new Random();
-
-        public static T RandomPick<T>(IReadOnlyList<T> source) => source.Any() ? source[Client.random.Next(source.Count)] : default;
-
         public static bool CanPutFieldCard(Card card)
         {
             return card.CardType == CardDef.Types.Type.Artifact
@@ -112,6 +107,8 @@ namespace CauldronSimplePlayer_wpf
 
         public GameContext CurrentContext { get; private set; }
 
+        public bool IsGaming => !(this.CurrentContext?.GameOver ?? false);
+
         public Client(string playerName, Action<ReadyGameReply> onPushNotifyAction)
             : this(playerName, "", onPushNotifyAction)
         { }
@@ -124,24 +121,6 @@ namespace CauldronSimplePlayer_wpf
 
             var channel = GrpcChannel.ForAddress("https://localhost:5001");
             this.grpcClient = new Cauldron.Grpc.Api.Cauldron.CauldronClient(channel);
-        }
-
-        public async ValueTask<bool> PlayActionAsync(Func<ValueTask> action)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(0.5));
-
-            if (this.CurrentContext?.GameOver ?? false)
-            {
-                var winner = this.CurrentContext.WinnerPlayerId == this.PlayerId
-                    ? this.CurrentContext.You.PublicPlayerInfo.Name
-                    : this.CurrentContext.Opponent.Name;
-                Console.WriteLine($"{winner} の勝ち！");
-                return false;
-            }
-
-            await action();
-
-            return true;
         }
 
         /// <summary>
@@ -174,12 +153,15 @@ namespace CauldronSimplePlayer_wpf
             });
 
             this.GameId = reply.GameId;
+            this.CurrentContext = null;
 
             return this.GameId;
         }
 
         public async ValueTask EnterGameAsync()
         {
+            if (!this.IsGaming) return;
+
             var cardPoolReply = await this.grpcClient.GetCardPoolAsync(new GetCardPoolRequest()
             {
                 GameId = this.GameId
@@ -189,7 +171,7 @@ namespace CauldronSimplePlayer_wpf
                 .ToArray();
 
             var deckCardIds = Enumerable.Range(0, 40)
-                .Select(_ => Client.RandomPick(cardPool).Id);
+                .Select(_ => RandomUtil.RandomPick(cardPool).Id);
 
             var reply = await this.grpcClient.EnterGameAsync(new EnterGameRequest()
             {
@@ -203,6 +185,8 @@ namespace CauldronSimplePlayer_wpf
 
         public void ReadyGame()
         {
+            if (!this.IsGaming) return;
+
             var call = this.grpcClient.ReadyGame(new ReadyGameRequest()
             {
                 GameId = this.GameId,
@@ -228,6 +212,8 @@ namespace CauldronSimplePlayer_wpf
 
         public async ValueTask StartTurnAsync()
         {
+            if (!this.IsGaming) return;
+
             var reply = await this.grpcClient.StartTurnAsync(new StartTurnRequest()
             {
                 GameId = this.GameId,
@@ -239,6 +225,8 @@ namespace CauldronSimplePlayer_wpf
 
         public async ValueTask PlayFromHandAsync(string cardId)
         {
+            if (!this.IsGaming) return;
+
             var reply = await this.grpcClient.PlayFromHandAsync(new PlayFromHandRequest()
             {
                 GameId = this.GameId,
@@ -251,6 +239,8 @@ namespace CauldronSimplePlayer_wpf
 
         public async ValueTask AttackToCardAsync(string attackCardId, string guardCardId)
         {
+            if (!this.IsGaming) return;
+
             var reply = await this.grpcClient.AttackToCreatureAsync(new AttackToCreatureRequest()
             {
                 GameId = this.GameId,
@@ -264,6 +254,8 @@ namespace CauldronSimplePlayer_wpf
 
         public async ValueTask AttackToPlayerAsync(string attackCardId)
         {
+            if (!this.IsGaming) return;
+
             var reply = await this.grpcClient.AttackToPlayerAsync(new AttackToPlayerRequest()
             {
                 GameId = this.GameId,
@@ -276,6 +268,8 @@ namespace CauldronSimplePlayer_wpf
 
         public async ValueTask EndTurnAsync()
         {
+            if (!this.IsGaming) return;
+
             var reply = await this.grpcClient.EndTurnAsync(new EndTurnRequest()
             {
                 GameId = this.GameId,
